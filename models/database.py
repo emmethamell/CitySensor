@@ -2,32 +2,61 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import sys
+sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
+from content_parser import parse_html
+from site_scraper import scrape_website
+from parse_from_google import parse_google_hours, scrape_website_google
+
+import datetime
 
 load_dotenv()
+
+
 supabaseURL: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(supabaseURL, key)
+service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+supabase: Client = create_client(supabaseURL, service_role_key)
 
-# remember you need to update policies to read and write to table
-#TEST
-response = supabase.table('websites').select('url').execute()
-print(response.data)
 
-# add functionality to read and write to database
-# create functions like such
 
-"""""""""
-class Database:
-    def __init__(self, url: str, key: str):
-        self.supabase: Client = create_client(url, key)
+# function that takes in a list of links, and updates database accordingly
+# test with the google links first
+def update_database(links):
+    for link in links:
+        hours = scrape_website_google(link)
+        existing = supabase.table('websites').select('url').eq('url', link).execute().data
 
-    def fetch_website_data(self, url: str):
-        query = self.supabase.table("Websites").select("*").eq("url", url).execute()
-        return query.data
+        current_time = datetime.datetime.now().isoformat()
 
-    def update_website_data(self, website_id: int, data: dict):
-        self.supabase.table("Websites").update(data).eq("website_id", website_id).execute()
+        if existing:
+            supabase.table('websites').upsert({
+                'url': link,
+                'last_check': datetime.now().isoformat(),
+                'new_hours': hours           
+            }, ['url']).execute()
 
-    def insert_new_website(self, data: dict):
-        self.supabase.table("Websites").insert(data).execute()
-"""""""""
+            # check if the old hours and new hours are different
+            updated_website = supabase.table('websites').select('old_hours', 'new_hours').eq('url', link).execute().data
+            if updated_website['old_hours'] != updated_website['new_hours']:
+                supabase.table('websites').update({
+                    'alert': True
+                }).eq('url', link).execute()
+
+        else:
+            supabase.table('websites').insert({
+                'url': link,
+                'last_update': current_time,
+                'last_check': current_time,
+                'alert': False,
+                'old_hours': hours,
+                'new_hours': hours
+            }).execute()
+        
+
+list_of_links = [
+    "https://www.google.com/search?q=savinos+belmont&hl=en",
+    "https://www.google.com/search?q=spoke+wine+bar+belmont&hl=en",
+    "https://www.google.com/search?q=my+other+kitchen+belmont&hl=en"
+]
+update_database(list_of_links)
