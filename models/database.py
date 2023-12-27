@@ -60,4 +60,5 @@ list_of_links = [
     "https://www.google.com/search?q=spoke+wine+bar+belmont&hl=en",
     "https://www.google.com/search?q=my+other+kitchen+belmont&hl=en"
 ]
-update_database(list_of_links)
+
+
