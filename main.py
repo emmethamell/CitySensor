@@ -8,7 +8,6 @@ from database import update_database
 
 # run with uvicorn main:app --reload
 app = FastAPI()
-
 @app.post("/update-database/")
 async def update_database_route(body: Dict[str, List[str]]):
     links = body.get("links")

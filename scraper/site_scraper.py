@@ -24,7 +24,6 @@ def scrape_website_no_selenium(url):
         return None
 
 
-# new method, first looks for a button with the word "hours" and clicks, much slower
 def scrape_website(url):
     driver = webdriver.Chrome()  
     driver.get(url)

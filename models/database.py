@@ -6,28 +6,21 @@ import sys
 sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
 from site_scraper import scrape_website
 from parse_from_google import parse_google_hours, scrape_website_google
-
 from datetime import datetime
 
 load_dotenv()
-
-
 supabaseURL: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(supabaseURL, service_role_key)
 
 
-
-# function that takes in a list of links, and updates database accordingly
+# takes in array of links and puts them through the scraper
 def update_database(links):
     for link in links:
-        hours = scrape_website_google(link)
-
+        hours = scrape_website(link)
         existing = supabase.table('websites').select('url').eq('url', link).execute().data
-
         current_time = datetime.now().isoformat()
-
         if existing:
             supabase.table('websites').upsert({
                 'url': link,
@@ -55,10 +48,5 @@ def update_database(links):
             }).execute()
         
 
-list_of_links = [
-    "https://www.google.com/search?q=savinos+belmont&hl=en",
-    "https://www.google.com/search?q=spoke+wine+bar+belmont&hl=en",
-    "https://www.google.com/search?q=my+other+kitchen+belmont&hl=en"
-]
 
 
