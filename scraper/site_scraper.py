@@ -5,8 +5,6 @@ This can be done through requests for static or selenium for dynamic
 Once the content is fetched, you will call a function from content_parser.py to
 parse the content
 """""""""
-
-
 import requests
 from selenium import webdriver
 from content_parser import parse_html

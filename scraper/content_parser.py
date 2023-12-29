@@ -11,8 +11,6 @@ Function should take the html content and find the opening
 def parse_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
 
-    
-
     # Strategy 1: Look for elements with specific class names or ids
     class_names = ['opening-hours', 'hours', 'store-hours']
     for class_name in class_names:
