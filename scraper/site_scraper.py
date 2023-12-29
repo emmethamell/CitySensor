@@ -10,6 +10,7 @@ parse the content
 import requests
 from selenium import webdriver
 from content_parser import parse_html
+from hours_parser import parse_hours
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -40,7 +41,10 @@ def scrape_website(url):
     driver.quit()
 
     parsed_content = parse_html(html)
-    return parsed_content
+
+    hours = parse_hours(parsed_content)
+
+    return hours
 
 
 

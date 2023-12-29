@@ -15,8 +15,8 @@ from nltk.chunk import RegexpParser
 from nltk.tokenize import RegexpTokenizer
 
 # Ensure required resources are downloaded
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
 
 load_dotenv()
 openai_key: str = os.environ.get("openai_api_key")
@@ -32,15 +32,15 @@ def parse_hours(text):
     * monday11am-9pmtuesday11am-9pmwednesday11am-9pmthursday11am-9pmfriday11am-9pmsaturday11am-9pmsunday11am-9pm
     """""""""
     # add spaces after days, hyphens, and am/pm
-    # pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|-|am|pm)"
-    # text = re.sub(pattern, lambda match: match.group(0) + ' ', text)
+    pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|-|am|pm)"
+    text = re.sub(pattern, lambda match: match.group(0) + ' ', text)
 
     # get rid of phone numbers
     pattern = r"(\+\d{1,3}\s?)?(\(\d{3}\)|\d{3})[-.\s]?\d{3}[-.\s]?\d{4}"
     text = re.sub(pattern, '', text)
 
-    #remove any random day abbrev before possible zip code
-    pattern = r"(mon|tue|wed|thurs|fri|sat|sun)\d{5}"
+    #remove any random day abbrev before possible zip code (indicates town name followed by postal code)
+    pattern = r"(mon|tue|wed|thurs|fri|sat|sun) \d{5}"
     text = re.sub(pattern, '', text)
     
     # remove any text before the first instance of a letter (if there is any) ex: remove phone number before 'mon'
@@ -54,19 +54,95 @@ def parse_hours(text):
     * mon 02478sunday - wednesday 4pm - 9pm thursday - saturday 1130am - 930pm
     * monday 11am - 9pm tuesday 11am - 9pm wednesday 11am - 9pm thursday 11am - 9pm friday 11am - 9pm saturday 11am - 9pm sunday 11am - 9pm
     """""""""
+    # replace all abbreviations with full day names
+    day_mapping = {
+        'mon': 'monday',
+        'tue': 'tuesday',
+        'tues': 'tuesday',
+        'wed': 'wednesday',
+        'thu': 'thursday',
+        'thur': 'thursday',
+        'fri': 'friday',
+        'sat': 'saturday',
+        'sun': 'sunday'
+    }
 
+    pattern = r'\b(mon|tue|wed|thu|thur|fri|sat|sun)\b'
+
+    # Function to replace each match with its corresponding full day name
+    def replace_match(match):
+        return day_mapping[match.group(0).lower()]
+    
+    text = re.sub(pattern, replace_match, text, flags=re.IGNORECASE)
+
+    """""""""
+    Now text should look like this:
+    LINE: 
+    tuesday wednesday thursday friday saturday 1200pm - 900pm monday 500pm - 900pm 
+    LINE: 
+    wednesday - saturday 5pm - 11pm 10pm 
+    LINE: 
+    monday - friday 1130am - 900pm saturday 1200pm - 900pm sunday 1200pm - 900pm 
+    LINE: 
+    tuesday - saturday 1100am - 730pm sunday monday 617- 932- 1444
+    LINE: 
+    sunday - wednesday 4pm - 9pm thursday - saturday 1130am - 930pm 
+    LINE: 
+    monday tuesday - sunday 1100am - 900pm 
+    LINE: 
+    tuesday 3pm - 10pm wednesday 3pm - 10pm thursday 3pm - 10pm 8pm friday 12pm - 11pm saturday 3pm - 11pm tuesday wednesday thursday 900friday saturday 930sunday monday 
+    LINE: 
+    monday 11am - 9pm tuesday 11am - 9pm wednesday 11am - 9pm thursday 11am - 9pm friday 11am - 9pm saturday 11am - 9pm sunday 11am - 9pm 
+    LINE: 
+    monday 1030am - 9pm tuesday 1030am - 9pm wednesday 1030am - 9pm thursday 1030am - 9pm friday 1030am - 9pm saturday 1030am - 9pm sunday 1100am - 9pm 
+    """""""""
+
+
+
+
+
+    #day_pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)"
+    #range_pattern = r"(\d{1,2}(?:[:\d{2}]*)?(?:am|pm)\s*-\s*\d{1,2}(?:[:\d{2}]*)?(?:am|pm))"
+    #combined_pattern = fr"({day_pattern}\s*-\s*{day_pattern}|{day_pattern})\s*{range_pattern}"
+    #text = re.findall(combined_pattern, text, re.IGNORECASE)
+
+    #pattern = r'((?:mon|tue|wed|thu|fri|sat|sun)\s*)+\s*(\d{1,2}(?:[:\d{2}]*)?(?:am|pm)\s*-\s*\d{1,2}(?:[:\d{2}]*)?(?:am|pm))'
+
+    text = replace_consecutive_days_with_range(text)
+
+
+    # I want the output to be a dictionary, where the keys are the days, and the values are the hours
     return text
 
 
 
-
+# HELPERS
 def normalize(text):
     input_string = text.lower()
     input_string = input_string.replace("–", "-")
     pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|\d|-|am|pm)"
     matches = re.findall(pattern, input_string)
     result = ''.join(matches)
+
     return result
+
+def replace_consecutive_days_with_range(text):
+    # List of full day names
+    days = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday)"
+
+    # Regular expression pattern to match sequences of day names
+    pattern = fr"({days} ?)+"
+
+    # Function to replace matched sequences with a range
+    def replacer(match):
+        days = match.group().split()
+        if days[0] == days[-1]:  # If the first and last day are the same
+            return f"{days[0]} "  # Return the single day
+        else:
+            return f"{days[0]} - {days[-1]} "  # Otherwise, return the range
+
+    # Replace all occurrences in the text
+    return re.sub(pattern, replacer, text)
 
 
 
@@ -85,12 +161,10 @@ def main():
 
     for text in example_texts:
         print("LINE: ")
-        print( parse_hours(text))
+        print(parse_hours(text))
 
 if __name__ == "__main__":
     main()
-
-
 
 
 

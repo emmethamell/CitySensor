@@ -5,10 +5,13 @@ beautiful soup to parse it. It extracts the data based on predefined html select
 from bs4 import BeautifulSoup
 import re
 
+"""""""""
+Function should take the html content and find the opening
+"""""""""
 def parse_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
 
-    #Attempt to find the opening hours using different strategies
+    
 
     # Strategy 1: Look for elements with specific class names or ids
     class_names = ['opening-hours', 'hours', 'store-hours']
