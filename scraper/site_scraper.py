@@ -27,6 +27,7 @@ def scrape_website(url):
     driver = webdriver.Chrome()  
     driver.get(url)
 
+    # TODO: look for buttons that contain 'more'
     try:
         button_or_link = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'hours')] | //a[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'hours')]"))

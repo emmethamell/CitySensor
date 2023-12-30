@@ -97,10 +97,6 @@ def parse_hours(text):
     monday 1030am - 9pm tuesday 1030am - 9pm wednesday 1030am - 9pm thursday 1030am - 9pm friday 1030am - 9pm saturday 1030am - 9pm sunday 1100am - 9pm 
     """""""""
 
-
-
-
-
     #day_pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)"
     #range_pattern = r"(\d{1,2}(?:[:\d{2}]*)?(?:am|pm)\s*-\s*\d{1,2}(?:[:\d{2}]*)?(?:am|pm))"
     #combined_pattern = fr"({day_pattern}\s*-\s*{day_pattern}|{day_pattern})\s*{range_pattern}"
@@ -110,8 +106,12 @@ def parse_hours(text):
 
     text = replace_consecutive_days_with_range(text)
 
-
-    # I want the output to be a dictionary, where the keys are the days, and the values are the hours
+    """""""""
+    TODO: continue parsing text to find the hours for each induvidual day
+    and put them in order from monday to sunday
+    TODO: leave any instances of "kitchen" and figure out how to parse that
+    """""""""
+    # I want the output to be a dictionary (not really actually, it should be text), where the keys are the days, and the values are the hours
     return text
 
 
