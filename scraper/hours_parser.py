@@ -14,15 +14,26 @@ from nltk.tag import pos_tag
 from nltk.chunk import RegexpParser
 from nltk.tokenize import RegexpTokenizer
 
-# Ensure required resources are downloaded
+from wordsegment import load, segment
+
+load()
+
+def segment_text(text):
+    # Segmenting the text
+    text = segment(text)
+    return ' '.join(text)
+
+
+input_text = "thisisateststringwithconcatenatedwords"
+print (segment_text(input_text))
+
+
 # nltk.download('punkt')
 # nltk.download('averaged_perceptron_tagger')
 
-load_dotenv()
-openai_key: str = os.environ.get("openai_api_key")
-
 
 def parse_hours(text):
+    # puts spaces between concatenated words, doesnt do a good job with numbers
     text = normalize(text)
     """""""""
     Some examples of what text should look like up to this point:
@@ -112,6 +123,11 @@ def parse_hours(text):
     TODO: leave any instances of "kitchen" and figure out how to parse that
     """""""""
     # I want the output to be a dictionary (not really actually, it should be text), where the keys are the days, and the values are the hours
+    
+    #look for three or four words followed by am or pm
+
+    text = re.sub(r"\b\d{3,4}(am|pm)\b", add_semicolon, text)
+    
     return text
 
 
@@ -145,6 +161,16 @@ def replace_consecutive_days_with_range(text):
     return re.sub(pattern, replacer, text)
 
 
+def add_semicolon(match):
+    time = match.group()
+    if len(time) == 5:  # If there are three numbers
+        return time[:1] + ':' + time[1:]
+    elif len(time) == 6:  # If there are four numbers
+        return time[:2] + ':' + time[2:]
+    else:
+        return time
+
+
 
 def main():
     example_texts = [
@@ -162,6 +188,8 @@ def main():
     for text in example_texts:
         print("LINE: ")
         print(parse_hours(text))
+
+
 
 if __name__ == "__main__":
     main()
