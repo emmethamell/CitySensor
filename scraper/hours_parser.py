@@ -28,10 +28,6 @@ input_text = "thisisateststringwithconcatenatedwords"
 print (segment_text(input_text))
 
 
-# nltk.download('punkt')
-# nltk.download('averaged_perceptron_tagger')
-
-
 def parse_hours(text):
     # puts spaces between concatenated words, doesnt do a good job with numbers
     text = normalize(text)
