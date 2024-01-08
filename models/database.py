@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import sys
 sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
 from site_scraper import scrape_website
-from parse_from_google import parse_google_hours, scrape_website_google
 from datetime import datetime
 
 load_dotenv()

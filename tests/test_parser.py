@@ -3,7 +3,7 @@ import pytest
 sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
 from content_parser import parse_html
 from site_scraper import scrape_website
-from parse_from_google import parse_google_hours, scrape_website_google
+
 
 
 # run with command: "pytest"
