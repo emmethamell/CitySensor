@@ -2,9 +2,7 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import sys
-sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
-from site_scraper import scrape_website
+from scraper.site_scraper import scrape_website
 from datetime import datetime
 
 load_dotenv()

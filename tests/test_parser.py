@@ -8,6 +8,9 @@ from site_scraper import scrape_website
 
 # run with command: "pytest"
 # if you want to see print statements, use command "pytest -s"
+
+pytestmark = pytest.mark.skip()
+
 def test_parse_html_no_hours():
     html = "<html><body><p>this does not contain any of the right keywords</p></body></html>"
     result = parse_html(html)

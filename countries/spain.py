@@ -1,32 +1,52 @@
 from typing import List, Dict
+from supabase import create_client, Client
+from dotenv import load_dotenv
+from datetime import datetime
+import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import requests
+from bs4 import BeautifulSoup
+import re
+
+
+load_dotenv()
+supabaseURL: str = os.environ.get("SUPABASE_URL")
+service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+supabase: Client = create_client(supabaseURL, service_role_key)
 
 class Spain:
+    
     @staticmethod
     def update_restaurants(links: List[str]):
-        # Your implementation here
         for link in links:
             content = Spain.scrape_website(link)
-            existing = supabase.table('websites').select('url').eq('url', link).execute().data
+            existing = supabase.table('Spain').select('url').eq('url', link).execute().data
             current_time = datetime.now().isoformat()
 
             if existing:
-                supabase.table('websites').upsert({
+                supabase.table('Spain').upsert({
                     'url': link,
                     'last_check': datetime.now().isoformat(),
                     'new_content': content          
                 }).execute()
 
                 # check if the old hours and new hours are different
-                updated_website = supabase.table('websites').select('old_content', 'new_content').eq('url', link).execute().data
+                updated_website = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
                 if updated_website:
                     first_website = updated_website[0]
-                    if first_website['old_hours'] != first_website['new_hours']:
+                    if first_website['old_content'] != first_website['new_content']:
                         supabase.table('websites').update({
                             'alert': True
                         }).eq('url', link).execute()
 
             else:
-                supabase.table('websites').insert({
+                # query yelp api for the data and insert it into the database
+                # get the yelp id, name, city, phone, and hours and add them along with other stuff
+                
+                supabase.table('Spain').insert({
                     'url': link,
                     'last_update': current_time,
                     'last_check': current_time,
@@ -35,20 +55,105 @@ class Spain:
                     'new_content': content
                 }).execute()
 
+    #RETRIEVE HTML
+    #Takes: url, Returns: html or error message if fails
     @staticmethod
-    def scrape_website(link: str):
-        # Your implementation here
-        pass
+    def get_html(url):
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            html_content = response.text
+            return html_content
+        else:
+            return f"Failed to retrieve the website: Status code {response.status_code}"
 
 
-"""""""""
-* Scrape content from webpage
-* Parse and clean content a bit, try and get phone number and hours
-* If existing:
-  * upsert with new content and last_check
-  * check if old content and new content are different
-    * If different, set alert to true
-* else: 
-  * NEW: call the yelp api for all the content needed, filling the database with the new content
-  * also, fill the database the the last_update, last_check, alert, old_content, new_content 
-"""""""""
+    #PARSE FOR HOURS
+    @staticmethod
+    def parse_html(html):
+        soup = BeautifulSoup(html, 'html.parser')
+        #first, try and find phone number
+
+
+        # Strategy 1: Look for elements with specific class names or ids
+        class_names = ['opening-hours', 'hours', 'store-hours']
+        for class_name in class_names:
+            hours_section = soup.find(class_=class_name)
+            if hours_section:
+                return hours_section.get_text(strip=True) 
+
+        # Strategy 2: Look for elements with specific titles (no links)
+        names = ["opening hours", "hours open", "hours"]
+        for name in names:
+            title = soup.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p'], string=re.compile(rf'\b{name}\b', re.IGNORECASE))
+            if title:
+                if title.find_parent('a'):
+                    continue
+                parent_div = title.find_parent('div')
+                if parent_div:
+                    return parent_div.get_text(strip=True)
+
+
+        # Strategy 3: Look for elements containing specific keywords
+        for name in names:
+            possible_hours_elements = soup.find_all(string=re.compile(rf'\b{name}\b', re.IGNORECASE))
+            for element in possible_hours_elements:
+                if element.find_parent('a'):
+                    continue
+                parent = element.parent
+                if parent and parent.name in ['div', 'p', 'span']:
+                    return parent.get_text(strip=True)
+
+        # Strategy 4: look for elements with monday, tuesday, etc.
+        days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        found_days = []
+        for day in days:
+            possible_hours_elements = soup.find_all(string=re.compile(rf'\b{day}\b', re.IGNORECASE))
+            for element in possible_hours_elements:
+                if element.find_parent('a'):
+                    continue
+                parent = element.find_parent('div')
+                if parent and parent.name in ['div', 'p', 'span']:
+                    found_days.append(parent.get_text(strip=True).replace('\xa0', ' '))
+
+                if found_days:
+                    return ' '.join(found_days)
+
+            return "Opening hours not found"
+
+    #PARSE FOR PHONE NUMBER 
+    #Takes: html, Returns: all instances of phone number
+    @staticmethod
+    def parse_phone_number(html):
+        # Make sure that request was successful
+        if html.startswith('Failed'):
+            return html
+
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Strategy 1: See if there is href="tel:....."
+        tel_links = soup.find_all('a', href=lambda href: href and href.startswith('tel:'))
+        if tel_links:
+            return [link['href'] for link in tel_links]
+        
+        # Strategy 2: look for phone number patterns
+        text = soup.get_text(separator=' ')
+        pattern = r'(\+\d{2}\s*\d{3}\s*\d{3}\s*\d{3})|(\d{2}\s*\d{3}\s*\d{2}\s*\d{2})|(\d{3}\s*\d{2}\s*\d{2}\s*\d{2})|(\d{9})|(\+\d{2})|\(\+\d{2}\)'
+        phone_numbers = re.findall(pattern, text)
+        return [''.join(num) for num in phone_numbers if any(num)]
+    
+
+        
+    #PARSE FOR HOURS
+    #Takes:html, Returns: all instances of opening hours
+    @staticmethod
+    def parse_hours(html):
+        if html.startswith('Failed'):
+            return html
+        
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text(separator=' ')
+        
+        
+
+
