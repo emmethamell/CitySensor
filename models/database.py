@@ -4,6 +4,10 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from scraper.site_scraper import scrape_website
 from datetime import datetime
+from typing import List, Dict
+from helpers.parse_helpers import Helper
+from countries.spain import Spain
+import json
 
 load_dotenv()
 supabaseURL: str = os.environ.get("SUPABASE_URL")
@@ -11,7 +15,69 @@ service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(supabaseURL, service_role_key)
 
 
-# takes in array of links and puts them through the scraper
+"""""""""
+* Takes: list of links, city name, and subtype.
+* For each link:
+  * Upsert the row with the primary key 'link', location (if it exists), subtype (if it exists),
+      last-check (now), and new content
+  * Extract new-content(JSON) and old-content(JSON), see if they are different:
+  * If yes:
+    * Check to see if the "hours" are different, if yes add to alert obj "hours have changed"
+    * Check to see if the "phone" are different, if yes add to alert obj "phone has changed"
+    * Upsert the alert_text with this
+"""""""""
+def update_database_spain(links: List[str], city: str, subtype: str):
+    for link in links:
+        html = Helper.get_html(link)
+        phone = Spain.parse_phone_number(html) # list
+        hours = Spain.parse_hours(html) #list
+        
+        new_content = {
+            "phone": phone,
+            "hours": hours
+        }
+        new_content = json.dumps(new_content)
+        
+        current_time = datetime.now().isoformat()
+        existing = supabase.table('websites').select('url').eq('url', link).execute().data
+        if existing:
+            supabase.table('Spain').upsert({
+                'url': link,
+                'location': city,
+                'subtype': subtype,
+                'last-check': current_time,
+                'new-content': new_content
+            }).execute()
+            #pull the old_content and new_content
+            updated = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
+            if updated:
+                alert = create_alert(updated[0], updated[1])
+                #if the alert is not None, update the "alert_text" with the alert
+                #and the "alert" to true
+                
+        else: #the link does not exist in the table yet
+            supabase.table('Spain').insert({
+                'url': link,
+                'location': city,
+                'subtype': subtype,
+                'last_update': current_time,
+                'last-check': current_time,
+                'alert': False,
+                'new_content': new_content,
+                'old_content': new_content
+                
+            }).execute()
+            
+
+"""""""""
+* Takes: old_content(json) and new_content(json).
+* Checks if their "hours" and "phone" attributes are different and
+  creates the change alert
+* Returns: the change alert, which is NULL (None) if there was no change
+"""""""""
+def create_alert(old_content, new_content):
+    return None
+    
 def update_database(links):
     for link in links:
         hours = scrape_website(link)

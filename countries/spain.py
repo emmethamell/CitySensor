@@ -55,71 +55,7 @@ class Spain:
                     'new_content': content
                 }).execute()
 
-    #RETRIEVE HTML
-    #Takes: url, Returns: html or error message if fails
-    @staticmethod
-    def get_html(url):
-        response = requests.get(url)
 
-        if response.status_code == 200:
-            html_content = response.text
-            return html_content
-        else:
-            return f"Failed to retrieve the website: Status code {response.status_code}"
-
-
-    #PARSE FOR HOURS
-    @staticmethod
-    def parse_html(html):
-        soup = BeautifulSoup(html, 'html.parser')
-        #first, try and find phone number
-
-
-        # Strategy 1: Look for elements with specific class names or ids
-        class_names = ['opening-hours', 'hours', 'store-hours']
-        for class_name in class_names:
-            hours_section = soup.find(class_=class_name)
-            if hours_section:
-                return hours_section.get_text(strip=True) 
-
-        # Strategy 2: Look for elements with specific titles (no links)
-        names = ["opening hours", "hours open", "hours"]
-        for name in names:
-            title = soup.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p'], string=re.compile(rf'\b{name}\b', re.IGNORECASE))
-            if title:
-                if title.find_parent('a'):
-                    continue
-                parent_div = title.find_parent('div')
-                if parent_div:
-                    return parent_div.get_text(strip=True)
-
-
-        # Strategy 3: Look for elements containing specific keywords
-        for name in names:
-            possible_hours_elements = soup.find_all(string=re.compile(rf'\b{name}\b', re.IGNORECASE))
-            for element in possible_hours_elements:
-                if element.find_parent('a'):
-                    continue
-                parent = element.parent
-                if parent and parent.name in ['div', 'p', 'span']:
-                    return parent.get_text(strip=True)
-
-        # Strategy 4: look for elements with monday, tuesday, etc.
-        days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-        found_days = []
-        for day in days:
-            possible_hours_elements = soup.find_all(string=re.compile(rf'\b{day}\b', re.IGNORECASE))
-            for element in possible_hours_elements:
-                if element.find_parent('a'):
-                    continue
-                parent = element.find_parent('div')
-                if parent and parent.name in ['div', 'p', 'span']:
-                    found_days.append(parent.get_text(strip=True).replace('\xa0', ' '))
-
-                if found_days:
-                    return ' '.join(found_days)
-
-            return "Opening hours not found"
 
     #PARSE FOR PHONE NUMBER 
     #Takes: html, Returns: all instances of phone number
@@ -153,6 +89,15 @@ class Spain:
         
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text(separator=' ')
+
+        pattern = r'\d{1,2}[:]\d{2}'
+        opening_hours = re.findall(pattern, text.replace(" ", ""))
+        
+        if opening_hours == []:
+            pattern = r'\d{1,2}[.]\d{2}'
+            opening_hours = re.findall (pattern, text.replace(" ", ""))
+        
+        return opening_hours
         
         
 
