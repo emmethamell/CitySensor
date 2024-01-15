@@ -7,8 +7,8 @@ parse the content
 """""""""
 import requests
 from selenium import webdriver
-from content_parser import parse_html
-from hours_parser import parse_hours
+from scraper.content_parser import parse_html
+from scraper.hours_parser import parse_hours
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC

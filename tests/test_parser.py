@@ -1,8 +1,6 @@
 import sys
 import pytest
-sys.path.append('/Users/emmethamell/Desktop/CitySensor/scraper')
-from content_parser import parse_html
-from site_scraper import scrape_website
+
 
 
 

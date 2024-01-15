@@ -45,8 +45,8 @@ def update_database_spain(links: List[str], city: str, subtype: str):
                 'url': link,
                 'location': city,
                 'subtype': subtype,
-                'last-check': current_time,
-                'new-content': new_content
+                'last_check': current_time,
+                'new_content': new_content
             }).execute()
             #pull the old_content and new_content
             updated = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
@@ -54,14 +54,18 @@ def update_database_spain(links: List[str], city: str, subtype: str):
                 alert = create_alert(updated[0], updated[1])
                 #if the alert is not None, update the "alert_text" with the alert
                 #and the "alert" to true
-                
+                if alert['hours'] != False or alert['phone'] != False:
+                    supabase.table('Spain').update({
+                        'alert': True,
+                        'alert_text': alert
+                    }).eq('url', link).execute()
         else: #the link does not exist in the table yet
             supabase.table('Spain').insert({
                 'url': link,
                 'location': city,
                 'subtype': subtype,
                 'last_update': current_time,
-                'last-check': current_time,
+                'last_check': current_time,
                 'alert': False,
                 'new_content': new_content,
                 'old_content': new_content
@@ -75,8 +79,19 @@ def update_database_spain(links: List[str], city: str, subtype: str):
   creates the change alert
 * Returns: the change alert, which is NULL (None) if there was no change
 """""""""
+"""""""""
+{
+    hours: ['12:00', '15:00']
+    phone: ['+34 123 456 789']
+}
+"""""""""
 def create_alert(old_content, new_content):
-    return None
+    alert = {'hours': False, 'phone': False}
+    if old_content['hours'] != new_content['hours']:
+        alert['hours'] = True
+    if old_content['phone'] != new_content['phone']:
+        alert['phone'] = True
+    return alert
     
 def update_database(links):
     for link in links:
