@@ -74,7 +74,9 @@ class TravelAdvisory:
                     return_list.append(data_text)
         else:
             print("Error:", response.status_code)
-        return return_list
+        
+        # call clean content before returning
+        return TravelAdvisory.clean_content(return_list)
     
     
     
@@ -94,7 +96,18 @@ class TravelAdvisory:
         except:
             return 'N/A'
           
-            
+    @staticmethod
+    def clean_content(content_list):
+        new_list = []
+        for item in content_list:
+            if 'Travel' in item[0]:
+                words = item[0].split()
+                index = words.index('Travel')
+                country = ' '.join(words[:index])
+                new_list.append([country, item[1], item[2], item[3]])
+        return new_list
+                
+               
             
         
         

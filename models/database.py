@@ -137,6 +137,14 @@ def update_travel_advisories():
             'summary': item[3]
         }).execute()
 
-        
-
+def get_travel_advisory(country):
+    result = supabase.table('travel_advisories').select('*').ilike('country', f'%{country}%').execute() 
+    if result:       
+        data = result.data
+        if not data:
+            return "Nothing found"
+        data_json = json.dumps(data[0])
+        return data_json
+    else:
+        return "Nothing found"
 
