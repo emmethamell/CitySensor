@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from typing import Union
 from typing import List, Dict
 from countries.spain import Spain
-from models.database import update_database, update_database_spain
+from models.database import update_database, update_database_spain, update_travel_advisories
 from models.api_models import MyModel
 from models.api_models import MyModel
 
@@ -25,3 +25,10 @@ async def update_spain_restaurants_route(body: MyModel):
     if links:
         update_database_spain(links, city, subtype)
     return {"message": "Spanish restaurants database updated successfully"}
+
+
+#TRAVEL ADVISORIES
+@app.post("/update-database/travel-advisories/")
+async def update_travel_advisories_route():
+    update_travel_advisories()
+

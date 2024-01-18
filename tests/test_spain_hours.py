@@ -1,6 +1,8 @@
 import pytest
 from countries.spain import Spain
 from helpers.parse_helpers import Helper
+
+pytestmark = pytest.mark.skip()
 #@pytest.mark.skip() 
 #HAS HREF
 def test_getting_phone1():

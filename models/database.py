@@ -8,6 +8,7 @@ from typing import List, Dict
 from helpers.parse_helpers import Helper
 from countries.spain import Spain
 import json
+from travel_advisories.scraper import TravelAdvisory
 
 load_dotenv()
 supabaseURL: str = os.environ.get("SUPABASE_URL")
@@ -39,7 +40,7 @@ def update_database_spain(links: List[str], city: str, subtype: str):
         new_content = json.dumps(new_content)
         
         current_time = datetime.now().isoformat()
-        existing = supabase.table('websites').select('url').eq('url', link).execute().data
+        existing = supabase.table('Spain').select('url').eq('url', link).execute().data
         if existing:
             supabase.table('Spain').upsert({
                 'url': link,
@@ -124,6 +125,18 @@ def update_database(links):
                 'new_hours': hours
             }).execute()
         
+def update_travel_advisories():
+    contentList = TravelAdvisory.scrape_website()
+    print(contentList)
+    # item = [country, level, date, summary]
+    for item in contentList:
+        supabase.table('travel_advisories').upsert({
+            'country': item[0],
+            'level': item[1],
+            'date_updated': item[2],
+            'summary': item[3]
+        }).execute()
 
+        
 
 
