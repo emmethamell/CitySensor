@@ -52,7 +52,10 @@ def update_database_spain(links: List[str], city: str, subtype: str):
             #pull the old_content and new_content
             updated = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
             if updated:
-                alert = create_alert(updated[0], updated[1])
+                content = updated[0]
+                old_content = json.loads(content['old_content'])
+                new_content = json.loads(content['new_content'])
+                alert = create_alert(old_content, new_content)
                 #if the alert is not None, update the "alert_text" with the alert
                 #and the "alert" to true
                 if alert['hours'] != False or alert['phone'] != False:
@@ -60,7 +63,7 @@ def update_database_spain(links: List[str], city: str, subtype: str):
                         'alert': True,
                         'alert_text': alert
                     }).eq('url', link).execute()
-        else: #the link does not exist in the table yet
+        else: 
             supabase.table('Spain').insert({
                 'url': link,
                 'location': city,

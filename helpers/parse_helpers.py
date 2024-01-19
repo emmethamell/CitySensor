@@ -1,5 +1,5 @@
 import requests
-
+from selenium import webdriver
 class Helper:
     
     #RETRIEVE HTML
@@ -12,4 +12,13 @@ class Helper:
             html_content = response.text
             return html_content
         else:
-            return f"Failed to retrieve the website: Status code {response.status_code}"
+            return Helper.get_html_selenium(url)
+        
+    @staticmethod
+    def get_html_selenium(url):
+            # Initialize the Chrome driver
+        driver = webdriver.Chrome()
+        driver.get(url)
+        html_content = driver.page_source
+        driver.quit()
+        return html_content

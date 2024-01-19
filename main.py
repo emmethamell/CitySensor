@@ -24,7 +24,10 @@ async def update_spain_restaurants_route(body: MyModel):
     city = body.city
     if links:
         update_database_spain(links, city, subtype)
-    return {"message": "Spanish restaurants database updated successfully"}
+    return {"message": "Spain database updated successfuly"}
+
+
+
 
 
 #TRAVEL ADVISORIES

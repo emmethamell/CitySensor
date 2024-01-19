@@ -18,44 +18,6 @@ service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(supabaseURL, service_role_key)
 
 class Spain:
-    
-    @staticmethod
-    def update_restaurants(links: List[str]):
-        for link in links:
-            content = Spain.scrape_website(link)
-            existing = supabase.table('Spain').select('url').eq('url', link).execute().data
-            current_time = datetime.now().isoformat()
-
-            if existing:
-                supabase.table('Spain').upsert({
-                    'url': link,
-                    'last_check': datetime.now().isoformat(),
-                    'new_content': content          
-                }).execute()
-
-                # check if the old hours and new hours are different
-                updated_website = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
-                if updated_website:
-                    first_website = updated_website[0]
-                    if first_website['old_content'] != first_website['new_content']:
-                        supabase.table('websites').update({
-                            'alert': True
-                        }).eq('url', link).execute()
-
-            else:
-                # query yelp api for the data and insert it into the database
-                # get the yelp id, name, city, phone, and hours and add them along with other stuff
-                
-                supabase.table('Spain').insert({
-                    'url': link,
-                    'last_update': current_time,
-                    'last_check': current_time,
-                    'alert': False,
-                    'old_content': content,
-                    'new_content': content
-                }).execute()
-
-
 
     #PARSE FOR PHONE NUMBER 
     #Takes: html, Returns: all instances of phone number
