@@ -37,12 +37,12 @@ def update_database_spain(links: List[str], city: str, subtype: str):
             "phone": phone,
             "hours": hours
         }
-        new_content = json.dumps(new_content)
+        # new_content = json.dumps(new_content)
         
         current_time = datetime.now().isoformat()
-        existing = supabase.table('Spain').select('url').eq('url', link).execute().data
+        existing = supabase.table('spain').select('url').eq('url', link).execute().data
         if existing:
-            supabase.table('Spain').upsert({
+            supabase.table('spain').upsert({
                 'url': link,
                 'location': city,
                 'subtype': subtype,
@@ -50,21 +50,21 @@ def update_database_spain(links: List[str], city: str, subtype: str):
                 'new_content': new_content
             }).execute()
             #pull the old_content and new_content
-            updated = supabase.table('Spain').select('old_content', 'new_content').eq('url', link).execute().data
+            updated = supabase.table('spain').select('old_content', 'new_content').eq('url', link).execute().data
             if updated:
                 content = updated[0]
-                old_content = json.loads(content['old_content'])
-                new_content = json.loads(content['new_content'])
+                old_content = content['old_content']
+                new_content = content['new_content']
                 alert = create_alert(old_content, new_content)
                 #if the alert is not None, update the "alert_text" with the alert
                 #and the "alert" to true
                 if alert['hours'] != False or alert['phone'] != False:
-                    supabase.table('Spain').update({
+                    supabase.table('spain').update({
                         'alert': True,
                         'alert_text': alert
                     }).eq('url', link).execute()
         else: 
-            supabase.table('Spain').insert({
+            supabase.table('spain').insert({
                 'url': link,
                 'location': city,
                 'subtype': subtype,
@@ -146,8 +146,20 @@ def get_travel_advisory(country):
         data = result.data
         if not data:
             return "Nothing found"
-        data_json = json.dumps(data[0])
+        data_json = data[0]
         return data_json
     else:
         return "Nothing found"
 
+#Return all json format list of objects with link and alert
+
+"""""""""
+* take the city name
+* retrieve all the rows with that city name ignoring case
+* for each row, create an object and add the link and the alert to it, then add this to a link
+* put the list in json format and return
+"""""""""
+def get_updates_spain(city):
+    businesses = supabase.table('spain').select('url', 'alert_text').ilike('location', city).eq('alert', True).execute()
+    return businesses
+        
