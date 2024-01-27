@@ -4,7 +4,6 @@ from typing import List, Dict
 from countries.spain import Spain
 from models.database import update_database, update_database_spain, update_travel_advisories, get_travel_advisory 
 from models.api_models import MyModel
-from models.api_models import MyModel
 
 
 # run with uvicorn main:app --reload
@@ -28,8 +27,6 @@ async def update_spain_restaurants_route(body: MyModel):
 
 
 
-
-
 #TRAVEL ADVISORIES
 @app.post("/update-database/travel-advisories/")
 async def update_travel_advisories_route():
@@ -38,4 +35,5 @@ async def update_travel_advisories_route():
 @app.get("/travel-advisories/{country}/")
 async def get_travel_advisories_route(country: str):
     return get_travel_advisory(country)
+
 
