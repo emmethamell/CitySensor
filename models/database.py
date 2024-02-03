@@ -16,28 +16,23 @@ service_role_key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(supabaseURL, service_role_key)
 
 
-"""""""""
-* Takes: list of links, city name, and subtype.
-* For each link:
-  * Upsert the row with the primary key 'link', location (if it exists), subtype (if it exists),
-      last-check (now), and new content
-  * Extract new-content(JSON) and old-content(JSON), see if they are different:
-  * If yes:
-    * Check to see if the "hours" are different, if yes add to alert obj "hours have changed"
-    * Check to see if the "phone" are different, if yes add to alert obj "phone has changed"
-    * Upsert the alert_text with this
-"""""""""
 def update_database_spain(links: List[str], city: str, subtype: str):
     for link in links:
-        html = Helper.get_html(link)
+        html = Helper.get_html_selenium(link)
         phone = Spain.parse_phone_number(html) # list
         hours = Spain.parse_hours(html) #list
+        
+        # Here if phone or hours are empty, try to use selenium scraper that looks around site for hours and phone numbers
+        if not phone or not hours:
+            child_pages_content = Helper.get_all_html(link)
+            for page in child_pages_content:
+                phone = Spain.parse_phone_number(page) 
+                hours = Spain.parse_hours(page) 
         
         new_content = {
             "phone": phone,
             "hours": hours
         }
-        # new_content = json.dumps(new_content)
         
         current_time = datetime.now().isoformat()
         existing = supabase.table('spain').select('url').eq('url', link).execute().data
@@ -152,13 +147,6 @@ def get_travel_advisory(country):
         return "Nothing found"
 
 #Return all json format list of objects with link and alert
-
-"""""""""
-* take the city name
-* retrieve all the rows with that city name ignoring case
-* for each row, create an object and add the link and the alert to it, then add this to a link
-* put the list in json format and return
-"""""""""
 def get_updates_spain(city):
     businesses = supabase.table('spain').select('url', 'alert_text').ilike('location', city).eq('alert', True).execute()
     return businesses
