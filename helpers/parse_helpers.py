@@ -18,7 +18,7 @@ class Helper:
             return Helper.get_html_selenium(url)
         
         
-    #TODO: make the webdrive wait for dynamic content to load
+    #TODO: make the webdriver wait for dynamic content to load
     @staticmethod
     def get_html_selenium(url):
             # Initialize the Chrome driver
@@ -35,10 +35,13 @@ class Helper:
     def get_all_html(url):
         driver = webdriver.Chrome()
         driver.get(url)
+        
+        child_pages_content = [driver.page_source]
     
         #find child page links
         anchors = driver.find_elements(By.TAG_NAME, 'a')
-        child_page_urls = [urljoin(url, anchor.get_attribute('href')) for anchor in anchors]
+        specific_words = ['hours', 'contacto', 'contact', 'horario']
+        child_page_urls = [urljoin(url, anchor.get_attribute('href')) for anchor in anchors if any(word in anchor.get_attribute('href') for word in specific_words)]
     
         #fetch and store html from child pages
         child_pages_content = []
