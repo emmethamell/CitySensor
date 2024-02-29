@@ -41,14 +41,14 @@ class Helper:
         #find child page links
         anchors = driver.find_elements(By.TAG_NAME, 'a')
         specific_words = ['hours', 'contacto', 'contact', 'horario']
-        child_page_urls = [urljoin(url, anchor.get_attribute('href')) for anchor in anchors if any(word in anchor.get_attribute('href') for word in specific_words)]
+        child_page_urls = [urljoin(url, anchor.get_attribute('href')) for anchor in anchors if any(word in anchor.get_attribute('href').lower() for word in specific_words)]
     
         #fetch and store html from child pages
         child_pages_content = []
         for child_url in child_page_urls:
             try:
                 result = urlparse(child_url)
-                # Check if the URL is valid by checking if it has a network location (netloc) and a scheme (like http or https)
+                #check if the URL is valid by checking if it has a network location (netloc) and a scheme (like http or https)
                 if all([result.scheme, result.netloc]):
                     driver.get(child_url)
                     child_pages_content.append(driver.page_source)

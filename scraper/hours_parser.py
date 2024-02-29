@@ -31,13 +31,7 @@ print (segment_text(input_text))
 def parse_hours(text):
     # puts spaces between concatenated words, doesnt do a good job with numbers
     text = normalize(text)
-    """""""""
-    Some examples of what text should look like up to this point:
-    * tuewedthufrisat1200pm-900pmmon500pm-900pm
-    * wednesday-saturday5pm-11pm10pm
-    * 617-489-699969mon02478sunday-wednesday4pm-9pmthursday-saturday1130am-930pm
-    * monday11am-9pmtuesday11am-9pmwednesday11am-9pmthursday11am-9pmfriday11am-9pmsaturday11am-9pmsunday11am-9pm
-    """""""""
+
     # add spaces after days, hyphens, and am/pm
     pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|-|am|pm)"
     text = re.sub(pattern, lambda match: match.group(0) + ' ', text)
@@ -54,13 +48,6 @@ def parse_hours(text):
     pattern = r"^[^a-zA-Z]*"
     text = re.sub(pattern, '', text)
 
-    """""""""
-    Now text should look like this:
-    * tue wed thu fri sat 1200pm - 900pm mon 500pm - 900pm
-    * wednesday - saturday 5pm - 11pm 10pm
-    * mon 02478sunday - wednesday 4pm - 9pm thursday - saturday 1130am - 930pm
-    * monday 11am - 9pm tuesday 11am - 9pm wednesday 11am - 9pm thursday 11am - 9pm friday 11am - 9pm saturday 11am - 9pm sunday 11am - 9pm
-    """""""""
     # replace all abbreviations with full day names
     day_mapping = {
         'mon': 'monday',
@@ -82,45 +69,10 @@ def parse_hours(text):
     
     text = re.sub(pattern, replace_match, text, flags=re.IGNORECASE)
 
-    """""""""
-    Now text should look like this:
-    LINE: 
-    tuesday wednesday thursday friday saturday 1200pm - 900pm monday 500pm - 900pm 
-    LINE: 
-    wednesday - saturday 5pm - 11pm 10pm 
-    LINE: 
-    monday - friday 1130am - 900pm saturday 1200pm - 900pm sunday 1200pm - 900pm 
-    LINE: 
-    tuesday - saturday 1100am - 730pm sunday monday 617- 932- 1444
-    LINE: 
-    sunday - wednesday 4pm - 9pm thursday - saturday 1130am - 930pm 
-    LINE: 
-    monday tuesday - sunday 1100am - 900pm 
-    LINE: 
-    tuesday 3pm - 10pm wednesday 3pm - 10pm thursday 3pm - 10pm 8pm friday 12pm - 11pm saturday 3pm - 11pm tuesday wednesday thursday 900friday saturday 930sunday monday 
-    LINE: 
-    monday 11am - 9pm tuesday 11am - 9pm wednesday 11am - 9pm thursday 11am - 9pm friday 11am - 9pm saturday 11am - 9pm sunday 11am - 9pm 
-    LINE: 
-    monday 1030am - 9pm tuesday 1030am - 9pm wednesday 1030am - 9pm thursday 1030am - 9pm friday 1030am - 9pm saturday 1030am - 9pm sunday 1100am - 9pm 
-    """""""""
 
-    #day_pattern = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)"
-    #range_pattern = r"(\d{1,2}(?:[:\d{2}]*)?(?:am|pm)\s*-\s*\d{1,2}(?:[:\d{2}]*)?(?:am|pm))"
-    #combined_pattern = fr"({day_pattern}\s*-\s*{day_pattern}|{day_pattern})\s*{range_pattern}"
-    #text = re.findall(combined_pattern, text, re.IGNORECASE)
-
-    #pattern = r'((?:mon|tue|wed|thu|fri|sat|sun)\s*)+\s*(\d{1,2}(?:[:\d{2}]*)?(?:am|pm)\s*-\s*\d{1,2}(?:[:\d{2}]*)?(?:am|pm))'
 
     text = replace_consecutive_days_with_range(text)
 
-    """""""""
-    TODO: continue parsing text to find the hours for each induvidual day
-    and put them in order from monday to sunday
-    TODO: leave any instances of "kitchen" and figure out how to parse that
-    """""""""
-    # I want the output to be a dictionary (not really actually, it should be text), where the keys are the days, and the values are the hours
-    
-    #look for three or four words followed by am or pm
 
     text = re.sub(r"\b\d{3,4}(am|pm)\b", add_semicolon, text)
     

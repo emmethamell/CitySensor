@@ -34,7 +34,6 @@ async def get_updates_spain_route(city: str):
     return get_updates_spain(city)
 
 
-
 #TRAVEL ADVISORIES
 @app.post("/update-database/travel-advisories/")
 async def update_travel_advisories_route():
