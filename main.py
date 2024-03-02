@@ -27,7 +27,7 @@ async def update_spain_restaurants_route(body: MyModel):
     city = body.city
     if links:
         update_database_spain(links, city, subtype)
-    return {"message": "Spain database updated successfuly"}
+    return {"message": "Spain database updated successfully"}
 
 @app.get("/get-updates/spain/{city}/")
 async def get_updates_spain_route(city: str):

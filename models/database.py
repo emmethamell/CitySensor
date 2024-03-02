@@ -18,7 +18,7 @@ supabase: Client = create_client(supabaseURL, service_role_key)
 
 def update_database_spain(links: List[str], city: str, subtype: str):
     for link in links:
-        html = Helper.get_html_selenium(link)
+        html = Helper.get_html(link) 
         phone = Spain.parse_phone_number(html) # list
         hours = Spain.parse_hours(html) #list
         
